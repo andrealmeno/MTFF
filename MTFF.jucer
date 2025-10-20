@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="RpOl4j" name="MTFF" projectType="audioplug" useAppConfig="1"
+              addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" pluginManufacturer="LIM"
+              pluginManufacturerCode="LIM!" pluginChannelConfigs="{1,1},{2,2}"
+              pluginFormats="buildAAX,buildAU,buildStandalone,buildVST3">
+  <MAINGROUP id="bsqUQo" name="MTFF">
+    <GROUP id="{8450BAFF-F77B-ED88-543B-576962EE3BAC}" name="Source">
+      <GROUP id="{FC087E18-1D92-5878-C571-BA91DC6E8859}" name="DSP">
+        <FILE id="WOBMoQ" name="Filter.h" compile="0" resource="0" file="Source/Filter.h"/>
+        <FILE id="TKN9P2" name="Distortion.h" compile="0" resource="0" file="Source/Distortion.h"/>
+      </GROUP>
+      <GROUP id="{BFBD1F9F-19B8-6724-1998-45ADBF127167}" name="GUI">
+        <FILE id="ke2LAX" name="PluginEditor.cpp" compile="1" resource="0"
+              file="Source/PluginEditor.cpp"/>
+        <FILE id="aSJYEs" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+        <FILE id="G77eMg" name="MyTheme.h" compile="0" resource="0" file="Source/MyTheme.h"/>
+      </GROUP>
+      <FILE id="sliDZc" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="OHIcqv" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="FXRCEL" name="PluginParameters.h" compile="0" resource="0"
+            file="Source/PluginParameters.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MTFF"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MTFF"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Documents/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
