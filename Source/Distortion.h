@@ -4,7 +4,10 @@
 
 class Distortion {
     public:
-    Distortion(bool defaultBypas = false) : bypass(defaultBypas){}
+    Distortion(bool defaultBypas = false) : bypass(defaultBypas){
+        inputGain.setGainDecibels(15.0f);
+        level.setGainLinear(1.0f);
+    }
     ~Distortion(){}
 
     void prepareToPlay(dsp::ProcessSpec& spec, double sampleRate){
@@ -12,7 +15,7 @@ class Distortion {
         
         inputGain.prepare(spec);
         inputGain.setRampDurationSeconds(0.02f);
-        inputGain.setGainDecibels(15.0f);
+        
         
         os.prepare(spec);
         dsp::ProcessSpec osSpec = spec;
@@ -30,9 +33,7 @@ class Distortion {
         eq.prepareToPlay(spec);
         
         level.prepare(spec);
-        level.setRampDurationSeconds(0.02f);
-        level.setGainLinear(1.0f);
-        
+        level.setRampDurationSeconds(0.02f);        
     }
     
     void processBlock(AudioBuffer<float>& buffer){
