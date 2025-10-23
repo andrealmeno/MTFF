@@ -19,7 +19,7 @@ void MTFFAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumInputChannels();
-    
+    DBG("num ch buffer" + String(spec.numChannels));
     disto.prepareToPlay(spec,sampleRate);
 }
 

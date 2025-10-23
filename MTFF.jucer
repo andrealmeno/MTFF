@@ -9,6 +9,7 @@
       <GROUP id="{FC087E18-1D92-5878-C571-BA91DC6E8859}" name="DSP">
         <FILE id="WOBMoQ" name="Filter.h" compile="0" resource="0" file="Source/Filter.h"/>
         <FILE id="TKN9P2" name="Distortion.h" compile="0" resource="0" file="Source/Distortion.h"/>
+        <FILE id="P0rplQ" name="TEST.h" compile="0" resource="0" file="Source/TEST.h"/>
       </GROUP>
       <GROUP id="{BFBD1F9F-19B8-6724-1998-45ADBF127167}" name="GUI">
         <FILE id="ke2LAX" name="PluginEditor.cpp" compile="1" resource="0"

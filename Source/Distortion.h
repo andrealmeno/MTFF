@@ -1,7 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
-#include "Filter.h"
 
+#include "Filter.h"
 class Distortion {
     public:
     Distortion(bool defaultBypas = false) : bypass(defaultBypas){
@@ -22,7 +22,8 @@ class Distortion {
         const auto osRate = os.getOversampledFrequency();
         const auto factor = osRate / spec.sampleRate;
         osSpec.maximumBlockSize = spec.maximumBlockSize * factor;
-        
+        osSpec.numChannels = spec.numChannels;
+        DBG("num: "+String(osSpec.numChannels));
         bpf.prepareToPlay(osSpec);
         
         lsf.prepareToPlay(osSpec);

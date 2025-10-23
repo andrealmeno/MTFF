@@ -1,33 +1,34 @@
 #pragma once
 #include <JuceHeader.h>
 
-using filtro = dsp::IIR::Filter<float>;
+    // typedef aggiornati: ogni filtro è duplicato per tutti i canali
 using coeffFiltro = dsp::IIR::Coefficients<float>;
-
+using filtro = dsp::IIR::Filter<float>;
+using stereoFiltro = dsp::ProcessorDuplicator<filtro,coeffFiltro>;
 
 #define TARGET_SAMPLING_RATE 192000.0
 
-
-class Filters {
+class Filters{
     public:
-    Filters() {}
-    virtual ~Filters() {}
-    virtual void prepareToPlay(dsp::ProcessSpec& spec) {
+    Filters(){}
+    virtual ~Filters(){}
+    
+    virtual void prepareToPlay(dsp::ProcessSpec& spec){
         filterChain.prepare(spec);
+        
+        
     }
     
-    virtual void processBlock(dsp::ProcessContextReplacing<float>& context) {
+    virtual void processBlock(dsp::ProcessContextReplacing<float>& context){
         filterChain.process(context);
     }
     
-    virtual void releaseResources() {
+    virtual void releaseResources(){
         filterChain.reset();
     }
     
     protected:
-
-    dsp::ProcessorChain<filtro, filtro> filterChain;
-    
+    dsp::ProcessorChain<stereoFiltro,stereoFiltro> filterChain;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Filters)
 };
 
@@ -36,15 +37,17 @@ class HighPassFilter : public Filters {
     HighPassFilter(){}
     
     void prepareToPlay(dsp::ProcessSpec& spec) override{
+        auto num = spec.numChannels;
+        DBG("num"+String(num));
         filterChain.prepare(spec);
-        auto coef = coeffFiltro::makeHighPass(spec.sampleRate, 106.0f);
-        filterChain.get<0>().coefficients = coef;
-        filterChain.get<1>().coefficients = coef;
+        
+        auto coeff = coeffFiltro::makeHighPass(spec.sampleRate, 106.0f);
+        *filterChain.get<0>().state = *coeff;
+        *filterChain.get<1>().state = *coeff;
     }
-    
-}; // attenuo circa di 20dB, molto più di quanto richiesto ovvero 6dB
-
-
+    private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HighPassFilter)
+};
 
 class OverSampler{
     public:
@@ -132,61 +135,48 @@ class OverSampler{
 class BandPassFilter : public Filters{
     public:
     BandPassFilter(){}
-    ~BandPassFilter(){}
     
-    void prepareToPlay(dsp::ProcessSpec& spec) override{
+    void prepareToPlay(dsp::ProcessSpec& spec) override {
         filterChain.prepare(spec);
-        auto coef = coeffFiltro::makeBandPass(spec.sampleRate, 1200.0f,1.0f);
-        filterChain.get<0>().coefficients = coef;
+        auto coeff = coeffFiltro::makeBandPass(spec.sampleRate, 1200.0f,0.3f);
+        *filterChain.get<0>().state = *coeff;
+        *filterChain.get<1>().state = *coeff;
+        
     }
-    
-    
+    private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BandPassFilter)
 };
 
 
-
-class LowShelvFilter : public Filters {
+class LowShelvFilter : public Filters{
     public:
-    LowShelvFilter(float defaultLowGain = 0.0f)
-    : lowGain(defaultLowGain)
-    {
-       lowSmoothGain.setCurrentAndTargetValue(lowGain);
+    LowShelvFilter(float defaultLowGain = 0.0f) : lowGain(defaultLowGain) {
+        lowSmoothGain.setCurrentAndTargetValue(lowGain);
+    }
+    void prepareToPlay(dsp::ProcessSpec& spec)  override{
+        sampleRate = spec.sampleRate;
+        filterChain.prepare(spec);
+        updateCoeff(Decibels::decibelsToGain(lowGain));
+        lowSmoothGain.reset(sampleRate, 0.0001f);
     }
     
-    void prepareToPlay(dsp::ProcessSpec& spec) override
-    {
-       sampleRate = spec.sampleRate;
-       filterChain.prepare(spec);
-       
-       updateCoefficients(Decibels::decibelsToGain(lowGain));
-       
-       lowSmoothGain.reset(sampleRate, 0.0001f);
-       
+    void processBlock(dsp::ProcessContextReplacing<float>& context) override{
+        if (lowSmoothGain.isSmoothing()){
+            float currentGain = Decibels::decibelsToGain(lowSmoothGain.getNextValue());
+            updateCoeff(currentGain);
+        }
+        filterChain.process(context);
     }
     
-    void processBlock(dsp::ProcessContextReplacing<float>& context) override
-    {
-       if(lowSmoothGain.isSmoothing()){
-           float currentGain = Decibels::decibelsToGain(lowSmoothGain.getNextValue());
-           updateCoefficients(currentGain);
-       }
-       filterChain.process(context);
-       
+    void setGain(float newValue){
+        lowGain = newValue;
+        lowSmoothGain.setTargetValue(lowGain);
     }
-    
-    void setGain(float newValue)
-    {
-       lowGain = newValue;
-       lowSmoothGain.setTargetValue(lowGain);
-    }
-    
     private:
-    
-    void updateCoefficients(float gain) {
+    void updateCoeff(float gain){
         auto coeff = coeffFiltro::makeLowShelf(sampleRate, freq, q, gain);
-        
-        filterChain.get<0>().coefficients = coeff;
-        filterChain.get<1>().coefficients = coeff;
+        *filterChain.get<0>().state = *coeff;
+        *filterChain.get<1>().state = *coeff;
     }
     
     float lowGain = 0.0f;
@@ -195,30 +185,25 @@ class LowShelvFilter : public Filters {
     float q = 0.7f;
     
     SmoothedValue<float, ValueSmoothingTypes::Linear> lowSmoothGain;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LowShelvFilter)
 };
 
-class HighShelvFilter : public Filters {
+class HighShelvFilter : public Filters{
     public:
-    HighShelvFilter(float defaultHighGain = 0.0f) : highGain(defaultHighGain){}
-    ~HighShelvFilter(){
+    HighShelvFilter(float defaultLowGain = 0.0f) : highGain(defaultLowGain) {
         highSmoothGain.setCurrentAndTargetValue(highGain);
     }
-    
-    void prepareToPlay(dsp::ProcessSpec& spec) override{
+    void prepareToPlay(dsp::ProcessSpec& spec)  override{
         sampleRate = spec.sampleRate;
         filterChain.prepare(spec);
-        
-        updateCoefficients(Decibels::decibelsToGain(highGain));
-        
+        updateCoeff(Decibels::decibelsToGain(highGain));
         highSmoothGain.reset(sampleRate, 0.0001f);
-
     }
     
-    void processBlock(dsp::ProcessContextReplacing<float>& context) override {
-        
+    void processBlock(dsp::ProcessContextReplacing<float>& context) override{
         if (highSmoothGain.isSmoothing()){
             float currentGain = Decibels::decibelsToGain(highSmoothGain.getNextValue());
-            updateCoefficients(currentGain);
+            updateCoeff(currentGain);
         }
         filterChain.process(context);
     }
@@ -227,24 +212,20 @@ class HighShelvFilter : public Filters {
         highGain = newValue;
         highSmoothGain.setTargetValue(highGain);
     }
-    
     private:
-    
-    void updateCoefficients(float gain){
-        auto coeff = coeffFiltro::makeHighShelf(sampleRate, freq, q, gain);
-        
-        filterChain.get<0>().coefficients = coeff;
-        filterChain.get<1>().coefficients = coeff;
+    void updateCoeff(float gain){
+        auto coeff = coeffFiltro::makeLowShelf(sampleRate, freq, q, gain);
+        *filterChain.get<0>().state = *coeff;
+        *filterChain.get<1>().state = *coeff;
     }
     
     float highGain = 0.0f;
-    double sampleRate = 0.0;
+    double sampleRate = 0.0f;
     float freq = 2000.0f;
     float q = 0.7f;
     
-    SmoothedValue<float,ValueSmoothingTypes::Linear> highSmoothGain;
-    
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HighShelvFilter);
+    SmoothedValue<float, ValueSmoothingTypes::Linear> highSmoothGain;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HighShelvFilter)
 };
 
 class MetalZone {
@@ -305,32 +286,27 @@ class MetalZone {
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MetalZone)
 };
 
-class EQ : public Filters {
+
+class EQ : public Filters{
     public:
-    EQ(float defaultEqGain = 0.0f, float defaultEqFreq = 2600.0f) : gain(defaultEqGain), freq(defaultEqFreq) {
-        eqSmoothedGain.setCurrentAndTargetValue(gain);
-        eqSmoothedFreq.setCurrentAndTargetValue(freq);
+    EQ(float defaultEqGain = 0.0f,float defaultEqFreq = 2600.0f) : gain(defaultEqGain),freq(defaultEqFreq){
+        eqSmoothedGain.setCurrentAndTargetValue(gain); eqSmoothedFreq.setCurrentAndTargetValue(freq);
     }
-    ~EQ(){}
     
     void prepareToPlay(dsp::ProcessSpec& spec) override{
         sampleRate = spec.sampleRate;
-        
         filterChain.prepare(spec);
-
-        updateCoefficients(freq, Decibels::decibelsToGain(gain));
         
-        eqSmoothedGain.reset(sampleRate,0.0001f);
-        eqSmoothedFreq.reset(sampleRate,0.0001f);
- 
+        updateCoeff(freq, Decibels::decibelsToGain(gain));
+        eqSmoothedGain.reset(sampleRate, 0.0001f);
+        eqSmoothedFreq.reset(sampleRate, 0.0001f);
     }
     
     void processBlock(dsp::ProcessContextReplacing<float>& context) override{
         float currentGain = Decibels::decibelsToGain(eqSmoothedGain.getNextValue());
         float currentFreq = eqSmoothedFreq.getNextValue();
         
-        updateCoefficients(currentFreq, currentGain);
-        
+        updateCoeff(currentFreq, currentGain);
         filterChain.process(context);
     }
     
@@ -345,20 +321,21 @@ class EQ : public Filters {
     }
     
     private:
-    
-    void updateCoefficients(float frequency, float gain){
+    void updateCoeff(float frequency, float gain){
         auto coeff = coeffFiltro::makePeakFilter(sampleRate, frequency, q, gain);
-        filterChain.get<0>().coefficients = coeff;
-        filterChain.get<1>().coefficients = coeff;
+        *filterChain.get<0>().state = *coeff;
+        *filterChain.get<1>().state = *coeff;
+        
     }
     
-    double sampleRate = 0.0f;
+    double sampleRate = 0.0;
     float gain = 0.0f;
-    float freq = 2600.0f; //range da 200 a 5k Hz
-    float q = 1.2f;
+    float freq = 2600.0f;
+    float q = 0.7;
     
     SmoothedValue<float,ValueSmoothingTypes::Linear> eqSmoothedGain;
     SmoothedValue<float,ValueSmoothingTypes::Linear> eqSmoothedFreq;
     
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EQ)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EQ);
 };
+
