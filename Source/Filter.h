@@ -1,7 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 
-    // typedef aggiornati: ogni filtro è duplicato per tutti i canali
+
 using coeffFiltro = dsp::IIR::Coefficients<float>;
 using filtro = dsp::IIR::Filter<float>;
 using stereoFiltro = dsp::ProcessorDuplicator<filtro,coeffFiltro>;
