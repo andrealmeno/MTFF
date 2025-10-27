@@ -190,7 +190,7 @@ class LowShelvFilter : public Filters{
 
 class HighShelvFilter : public Filters{
     public:
-    HighShelvFilter(float defaultLowGain = 0.0f) : highGain(defaultLowGain) {
+    HighShelvFilter(float defaultHighGain = 0.0f) : highGain(defaultHighGain) {
         highSmoothGain.setCurrentAndTargetValue(highGain);
     }
     void prepareToPlay(dsp::ProcessSpec& spec)  override{
@@ -214,14 +214,14 @@ class HighShelvFilter : public Filters{
     }
     private:
     void updateCoeff(float gain){
-        auto coeff = coeffFiltro::makeLowShelf(sampleRate, freq, q, gain);
+        auto coeff = coeffFiltro::makeHighShelf(sampleRate, freq, q, gain);
         *filterChain.get<0>().state = *coeff;
         *filterChain.get<1>().state = *coeff;
     }
     
     float highGain = 0.0f;
     double sampleRate = 0.0f;
-    float freq = 2000.0f;
+    float freq = 1000.0f;
     float q = 0.7f;
     
     SmoothedValue<float, ValueSmoothingTypes::Linear> highSmoothGain;
