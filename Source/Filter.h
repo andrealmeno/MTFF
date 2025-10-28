@@ -37,8 +37,6 @@ class HighPassFilter : public Filters {
     HighPassFilter(){}
     
     void prepareToPlay(dsp::ProcessSpec& spec) override{
-        auto num = spec.numChannels;
-        DBG("num"+String(num));
         filterChain.prepare(spec);
         
         auto coeff = coeffFiltro::makeHighPass(spec.sampleRate, 106.0f);
@@ -151,26 +149,20 @@ class BandPassFilter : public Filters{
 class LowShelvFilter : public Filters{
     public:
     LowShelvFilter(float defaultLowGain = 0.0f) : lowGain(defaultLowGain) {
-        lowSmoothGain.setCurrentAndTargetValue(lowGain);
     }
     void prepareToPlay(dsp::ProcessSpec& spec)  override{
         sampleRate = spec.sampleRate;
         filterChain.prepare(spec);
         updateCoeff(Decibels::decibelsToGain(lowGain));
-        lowSmoothGain.reset(sampleRate, 0.0001f);
     }
     
     void processBlock(dsp::ProcessContextReplacing<float>& context) override{
-        if (lowSmoothGain.isSmoothing()){
-            float currentGain = Decibels::decibelsToGain(lowSmoothGain.getNextValue());
-            updateCoeff(currentGain);
-        }
         filterChain.process(context);
     }
     
     void setGain(float newValue){
         lowGain = newValue;
-        lowSmoothGain.setTargetValue(lowGain);
+        updateCoeff(Decibels::decibelsToGain(lowGain));
     }
     private:
     void updateCoeff(float gain){
@@ -183,34 +175,26 @@ class LowShelvFilter : public Filters{
     double sampleRate = 0.0f;
     float freq = 200.0f;
     float q = 0.7f;
-    
-    SmoothedValue<float, ValueSmoothingTypes::Linear> lowSmoothGain;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LowShelvFilter)
 };
 
 class HighShelvFilter : public Filters{
     public:
     HighShelvFilter(float defaultHighGain = 0.0f) : highGain(defaultHighGain) {
-        highSmoothGain.setCurrentAndTargetValue(highGain);
     }
     void prepareToPlay(dsp::ProcessSpec& spec)  override{
         sampleRate = spec.sampleRate;
         filterChain.prepare(spec);
         updateCoeff(Decibels::decibelsToGain(highGain));
-        highSmoothGain.reset(sampleRate, 0.0001f);
     }
     
     void processBlock(dsp::ProcessContextReplacing<float>& context) override{
-        if (highSmoothGain.isSmoothing()){
-            float currentGain = Decibels::decibelsToGain(highSmoothGain.getNextValue());
-            updateCoeff(currentGain);
-        }
         filterChain.process(context);
     }
     
     void setGain(float newValue){
         highGain = newValue;
-        highSmoothGain.setTargetValue(highGain);
+        updateCoeff(Decibels::decibelsToGain(highGain));
     }
     private:
     void updateCoeff(float gain){
@@ -224,7 +208,6 @@ class HighShelvFilter : public Filters{
     float freq = 1000.0f;
     float q = 0.7f;
     
-    SmoothedValue<float, ValueSmoothingTypes::Linear> highSmoothGain;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HighShelvFilter)
 };
 
@@ -290,7 +273,6 @@ class MetalZone {
 class EQ : public Filters{
     public:
     EQ(float defaultEqGain = 0.0f,float defaultEqFreq = 2600.0f) : gain(defaultEqGain),freq(defaultEqFreq){
-        eqSmoothedGain.setCurrentAndTargetValue(gain); eqSmoothedFreq.setCurrentAndTargetValue(freq);
     }
     
     void prepareToPlay(dsp::ProcessSpec& spec) override{
@@ -298,26 +280,20 @@ class EQ : public Filters{
         filterChain.prepare(spec);
         
         updateCoeff(freq, Decibels::decibelsToGain(gain));
-        eqSmoothedGain.reset(sampleRate, 0.0001f);
-        eqSmoothedFreq.reset(sampleRate, 0.0001f);
     }
     
     void processBlock(dsp::ProcessContextReplacing<float>& context) override{
-        float currentGain = Decibels::decibelsToGain(eqSmoothedGain.getNextValue());
-        float currentFreq = eqSmoothedFreq.getNextValue();
-        
-        updateCoeff(currentFreq, currentGain);
         filterChain.process(context);
     }
     
-    void setGain(float newValue){
+   void setGain(float newValue){
         gain = newValue;
-        eqSmoothedGain.setTargetValue(gain);
+        updateCoeff(freq, Decibels::decibelsToGain(gain));
     }
     
     void setFrequency(float newValue){
         freq = newValue;
-        eqSmoothedFreq.setTargetValue(freq);
+        updateCoeff(freq, Decibels::decibelsToGain(gain));
     }
     
     private:
@@ -333,8 +309,6 @@ class EQ : public Filters{
     float freq = 2600.0f;
     float q = 0.7;
     
-    SmoothedValue<float,ValueSmoothingTypes::Linear> eqSmoothedGain;
-    SmoothedValue<float,ValueSmoothingTypes::Linear> eqSmoothedFreq;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EQ);
 };
