@@ -3,7 +3,8 @@
 <JUCERPROJECT id="RpOl4j" name="MTFF" projectType="audioplug" useAppConfig="1"
               addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" pluginManufacturer="LIM"
               pluginManufacturerCode="LIM!" pluginChannelConfigs="{1,1},{2,2}"
-              pluginFormats="buildAAX,buildAU,buildStandalone,buildVST3">
+              pluginFormats="buildAAX,buildAU,buildStandalone,buildVST3" pluginVST3Category="Distortion"
+              pluginAAXCategory="8192">
   <MAINGROUP id="bsqUQo" name="MTFF">
     <GROUP id="{8450BAFF-F77B-ED88-543B-576962EE3BAC}" name="Source">
       <GROUP id="{FC087E18-1D92-5878-C571-BA91DC6E8859}" name="DSP">

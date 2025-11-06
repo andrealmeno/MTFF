@@ -127,7 +127,6 @@ class OverSampler{
     float invAtanGain = 1.0f / atan(1.0f);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverSampler)
-        //    finire di scrivere le tre classi up down e saturation e dichiarare i membri privati della classe
 };
 
 class BandPassFilter : public Filters{
